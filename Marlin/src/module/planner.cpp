@@ -215,6 +215,8 @@ float Planner::previous_nominal_speed_sqr;
 
 #if ENABLED(LIN_ADVANCE)
   float Planner::extruder_advance_K[EXTRUDERS]; // Initialized by settings.load()
+  float Planner::extruder_advance_Kd[EXTRUDERS]; // Initialized by settings.load()
+  float Planner::extruder_advance_Ka[EXTRUDERS]; // Initialized by settings.load()
 #endif
 
 #if HAS_POSITION_FLOAT
@@ -1179,7 +1181,14 @@ void Planner::recalculate_trapezoids() {
               if (block->use_advance_lead) {
                 const float comp = block->e_D_ratio * extruder_advance_K[active_extruder] * settings.axis_steps_per_mm[E_AXIS];
                 block->max_adv_steps = current_nominal_speed * comp;
-                block->final_adv_steps = next_entry_speed * comp;
+                block->final_adv_steps = block->add_decomp_steps = next_entry_speed * comp;
+                if(current_nominal_speed >= next_entry_speed && extruder_advance_K[active_extruder] > 0) {
+                  block->final_adv_steps = block->final_adv_steps * extruder_advance_Kd[active_extruder] / extruder_advance_K[active_extruder];
+                  block->add_decomp_steps -= block->final_adv_steps;
+                } else {
+                  block->add_decomp_steps = 0;
+                }
+//                SERIAL_ECHOLNPAIR("P: comp:",comp," mas:",block->max_adv_steps," fas:",block->final_adv_steps," deof:",block->add_decomp_steps);
               }
             #endif
           }
@@ -2213,6 +2222,11 @@ bool Planner::_populate_block(block_t * const block, bool split_move,
   #if ENABLED(LIN_ADVANCE)
     if (block->use_advance_lead) {
       block->advance_speed = (STEPPER_TIMER_RATE) / (extruder_advance_K[active_extruder] * block->e_D_ratio * block->acceleration * settings.axis_steps_per_mm[E_AXIS_N(extruder)]);
+      if(extruder_advance_Kd[active_extruder]) {  // Just in case something go wrong
+        block->decomp_speed = block->advance_speed * extruder_advance_K[active_extruder] / extruder_advance_Kd[active_extruder];
+      } else {
+        block->decomp_speed = block->advance_speed;
+      }
       #if ENABLED(LA_DEBUG)
         if (extruder_advance_K[active_extruder] * block->e_D_ratio * block->acceleration * 2 < SQRT(block->nominal_speed_sqr) * block->e_D_ratio)
           SERIAL_ECHOLNPGM("More than 2 steps per eISR loop executed.");

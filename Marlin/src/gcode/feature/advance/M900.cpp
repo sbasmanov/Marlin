@@ -59,8 +59,14 @@ void GcodeSuite::M900() {
     }
   #endif
 
-  float &kref = planner.extruder_advance_K[tool_index], newK = kref;
-  const float oldK = newK;
+  float &ref_C = planner.extruder_advance_K[tool_index], new_C = ref_C;
+  const float old_C = new_C;
+
+  float &ref_D = planner.extruder_advance_Kd[tool_index], new_D = ref_D;
+  const float old_D = new_D;
+
+  float &ref_A = planner.extruder_advance_Ka[tool_index], new_A = ref_A;
+  const float old_A = new_A;
 
   #if ENABLED(EXTRA_LIN_ADVANCE_K)
 
@@ -97,17 +103,45 @@ void GcodeSuite::M900() {
 
     if (parser.seenval('K')) {
       const float K = parser.value_float();
-      if (WITHIN(K, 0, 10))
-        newK = K;
+      if (WITHIN(K, 0, 10)) {
+        new_C = new_D = K;
+        new_A = 0;
+      }
       else
         echo_value_oor('K');
+    }
+    if (parser.seenval('C')) {
+      const float C = parser.value_float();
+      if (WITHIN(C, 0, 10)) {
+        new_C = C;
+      }
+      else
+        echo_value_oor('C');
+    }
+    if (parser.seenval('D')) {
+      const float D = parser.value_float();
+      if (WITHIN(D, 0, 10) && D > 0) {
+        new_D = D;
+      }
+      else
+        echo_value_oor('D');
+    }
+    if (parser.seenval('A')) {
+      const float A = parser.value_float();
+      if (WITHIN(A, 0, 10)) {
+        new_A = A;
+      }
+      else
+        echo_value_oor('A');
     }
 
   #endif
 
-  if (newK != oldK) {
+  if (new_C != old_C || new_D != old_D || new_A != old_A) {
     planner.synchronize();
-    kref = newK;
+    ref_C = new_C;
+    ref_D = new_D;
+    ref_A = new_A;
   }
 
   if (!parser.seen_any()) {
@@ -129,7 +163,7 @@ void GcodeSuite::M900() {
 
       SERIAL_ECHO_START();
       #if EXTRUDERS < 2
-        SERIAL_ECHOLNPAIR("Advance K=", planner.extruder_advance_K[0]);
+        SERIAL_ECHOLNPAIR("Advance C=", planner.extruder_advance_K[0], " D=", planner.extruder_advance_Kd[0], " A=", planner.extruder_advance_Ka[0]);
       #else
         SERIAL_ECHOPGM("Advance K");
         LOOP_L_N(i, EXTRUDERS) {

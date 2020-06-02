@@ -218,7 +218,8 @@ uint32_t Stepper::advance_divisor = 0,
            Stepper::LA_isr_rate = LA_ADV_NEVER;
   uint16_t Stepper::LA_current_adv_steps = 0,
            Stepper::LA_final_adv_steps,
-           Stepper::LA_max_adv_steps;
+           Stepper::LA_max_adv_steps,
+           Stepper::LA_add_decomp_steps;
 
   int8_t   Stepper::LA_steps = 0;
 
@@ -1912,9 +1913,11 @@ uint32_t Stepper::block_phase_isr() {
         #if ENABLED(LIN_ADVANCE)
           if (LA_use_advance_lead) {
             // Wake up eISR on first deceleration loop and fire ISR if final adv_rate is reached
-            if (step_events_completed <= decelerate_after + steps_per_isr || (LA_steps && LA_isr_rate != current_block->advance_speed)) {
+            if (step_events_completed <= decelerate_after + steps_per_isr || (LA_steps && LA_isr_rate != current_block->decomp_speed)) {
               initiateLA();
-              LA_isr_rate = current_block->advance_speed;
+              LA_isr_rate = current_block->decomp_speed;
+              LA_add_decomp_steps = current_block->add_decomp_steps;
+//              SERIAL_ECHOLNPAIR("D: isr_rate:",LA_isr_rate," sec:",step_events_completed," dea:",decelerate_after," las:",LA_steps," lcas:",LA_current_adv_steps," lads:",LA_add_decomp_steps);
             }
           }
           else if (LA_steps) nextAdvanceISR = 0;
@@ -2268,6 +2271,12 @@ uint32_t Stepper::block_phase_isr() {
       if (step_events_completed > decelerate_after && LA_current_adv_steps > LA_final_adv_steps) {
         LA_steps--;
         LA_current_adv_steps--;
+        interval = LA_isr_rate;
+      }
+      else if(LA_add_decomp_steps > 0) {
+        LA_add_decomp_steps--;
+        LA_steps--;
+        //Don't decrement LA_current_adv_steps here!
         interval = LA_isr_rate;
       }
       else if (step_events_completed < decelerate_after && LA_current_adv_steps < LA_max_adv_steps) {
