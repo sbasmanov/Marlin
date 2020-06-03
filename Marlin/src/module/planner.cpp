@@ -1184,7 +1184,12 @@ void Planner::recalculate_trapezoids() {
                 block->max_adv_steps = current_nominal_speed * comp;
                 block->decomp_steps = current_nominal_speed * decomp - block->max_adv_steps;  //additional steps to add/substract from LA_current_adv_steps in stepper. signed int.
                 block->final_adv_steps = next_entry_speed * comp;
-                block->add_decomp_steps = next_entry_speed * block->e_D_ratio * extruder_advance_Ka[active_extruder] * settings.axis_steps_per_mm[E_AXIS];
+                if(next_entry_speed <= current_nominal_speed) {
+                  block->add_decomp_steps = next_entry_speed * block->e_D_ratio * extruder_advance_Ka[active_extruder] * settings.axis_steps_per_mm[E_AXIS];
+                } else {
+                  block->add_decomp_steps = 0;
+                }
+                
 //                SERIAL_ECHOLNPAIR("P: comp:",comp," mas:",block->max_adv_steps," fas:",block->final_adv_steps," nes:",next_entry_speed," ads:",block->add_decomp_steps);
               }
             #endif
