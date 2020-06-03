@@ -2274,10 +2274,15 @@ uint32_t Stepper::block_phase_isr() {
         LA_current_adv_steps--;
         interval = LA_isr_rate;
       }
-      else if(LA_add_decomp_steps > 0) {
-        LA_add_decomp_steps--;
-        LA_steps--;
-        //Don't decrement LA_current_adv_steps here!
+      else if(LA_add_decomp_steps) {
+        if(LA_add_decomp_steps > 0) {
+          LA_add_decomp_steps--;
+          LA_steps++;
+        } else {
+          LA_add_decomp_steps++;
+          LA_steps--;
+        }
+        //Don't change LA_current_adv_steps here!
         interval = LA_isr_rate;
       }
       else if (step_events_completed < decelerate_after && LA_current_adv_steps < LA_max_adv_steps) {

@@ -128,7 +128,7 @@ void GcodeSuite::M900() {
     }
     if (parser.seenval('A')) {
       const float A = parser.value_float();
-      if (WITHIN(A, 0, 10)) {
+      if (WITHIN(A, -10, 10)) {
         new_A = A;
       }
       else

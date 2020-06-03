@@ -1,0 +1,16 @@
+Expiremental parameters to fine tune Linear Advance. Discussion: https://github.com/MarlinFirmware/Marlin/issues/16880
+Format: M900 K<kfactor> C<cfactor> D<dfactor> A<afactor>
+
+M900 K<kfactor> - sets normal linear advance K, resetting C=D=K and A=0, parameter exists for compatibily with other software.
+
+C - compression coefficient, same meaning as K. Used on acceleration.
+    unit [mm of filament compression needed per 1mm/s extrusion speed]or [mm/mm/s].
+    
+D - decompression coefficient, works same way as K, but for deceleration: higer D, more retraction on deceleration will be performed. Normally shuould be D>C. Must be non zero!
+    unit [mm of filament compression needed per 1mm/s extrusion speed] or [mm/mm/s].
+    
+A - additional compensation steps to be performent on next segment, if speed of current segment is higher that speed of next segment.
+    when A > 0, additional extrusion will be performent on the beginning of segment
+    when A < 0, additional retraction will be performent on the beginning of segment
+    unit [mm of filament compression needed per 1mm/s extrusion speed] or [mm/mm/s].
+

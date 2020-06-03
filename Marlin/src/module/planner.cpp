@@ -1179,13 +1179,14 @@ void Planner::recalculate_trapezoids() {
             calculate_trapezoid_for_block(block, current_entry_speed * nomr, next_entry_speed * nomr);
             #if ENABLED(LIN_ADVANCE)
               if (block->use_advance_lead) {
-                const float comp = block->e_D_ratio * extruder_advance_K[active_extruder] * settings.axis_steps_per_mm[E_AXIS];
-                const float decomp = block->e_D_ratio * extruder_advance_Kd[active_extruder] * settings.axis_steps_per_mm[E_AXIS];
+                const float step_mult = block->e_D_ratio * settings.axis_steps_per_mm[E_AXIS];
+                const float comp = extruder_advance_K[active_extruder] * step_mult;
+                const float decomp = extruder_advance_Kd[active_extruder] * step_mult;
                 block->max_adv_steps = current_nominal_speed * comp;
                 block->decomp_steps = current_nominal_speed * decomp - block->max_adv_steps;  //additional steps to add/substract from LA_current_adv_steps in stepper. signed int.
                 block->final_adv_steps = next_entry_speed * comp;
                 if(next_entry_speed <= current_nominal_speed) {
-                  block->add_decomp_steps = next_entry_speed * block->e_D_ratio * extruder_advance_Ka[active_extruder] * settings.axis_steps_per_mm[E_AXIS];
+                  block->add_decomp_steps = next_entry_speed * extruder_advance_Ka[active_extruder] * step_mult;
                 } else {
                   block->add_decomp_steps = 0;
                 }
