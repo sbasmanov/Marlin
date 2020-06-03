@@ -1915,9 +1915,10 @@ uint32_t Stepper::block_phase_isr() {
             // Wake up eISR on first deceleration loop and fire ISR if final adv_rate is reached
             if (step_events_completed <= decelerate_after + steps_per_isr || (LA_steps && LA_isr_rate != current_block->decomp_speed)) {
               initiateLA();
+              LA_current_adv_steps += current_block->decomp_steps; 
               LA_isr_rate = current_block->decomp_speed;
               LA_add_decomp_steps = current_block->add_decomp_steps;
-//              SERIAL_ECHOLNPAIR("D: isr_rate:",LA_isr_rate," sec:",step_events_completed," dea:",decelerate_after," las:",LA_steps," lcas:",LA_current_adv_steps," lads:",LA_add_decomp_steps);
+//              SERIAL_ECHOLNPAIR("D: isr_rate:",LA_isr_rate," sec:",step_events_completed," dea:",decelerate_after," las:",LA_steps," lcas:",LA_current_adv_steps," lads:",LA_add_decomp_steps," lds:",current_block->decomp_steps);
             }
           }
           else if (LA_steps) nextAdvanceISR = 0;
