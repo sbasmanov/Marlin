@@ -1185,7 +1185,7 @@ void Planner::recalculate_trapezoids() {
                 block->max_adv_steps = current_nominal_speed * comp;
                 block->decomp_steps = current_nominal_speed * decomp - block->max_adv_steps;  //additional steps to add/substract from LA_current_adv_steps in stepper. signed int.
                 block->final_adv_steps = next_entry_speed * comp;
-                if(next_entry_speed <= current_nominal_speed) {
+                if(next_entry_speed < current_nominal_speed) {  //for some reason, next_entry_speed == curent_nominal_speed even if next block is faster
                   block->add_decomp_steps = next_entry_speed * extruder_advance_Ka[active_extruder] * step_mult;
                 } else {
                   block->add_decomp_steps = 0;
