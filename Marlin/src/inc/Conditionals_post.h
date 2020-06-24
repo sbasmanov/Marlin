@@ -30,6 +30,13 @@
   // Extras for CI testing
 #endif
 
+// ADC
+#ifdef BOARD_ADC_VREF
+  #define ADC_VREF BOARD_ADC_VREF
+#else
+  #define ADC_VREF HAL_ADC_VREF
+#endif
+
 // Linear advance uses Jerk since E is an isolated axis
 #if BOTH(HAS_JUNCTION_DEVIATION, LIN_ADVANCE)
   #define HAS_LINEAR_E_JERK 1
@@ -261,6 +268,13 @@
 #endif
 
 /**
+ * Provide a DEFAULT_VOLUMETRIC_EXTRUDER_LIMIT in case NO_VOLUMETRICS is enabled
+ */
+#ifndef DEFAULT_VOLUMETRIC_EXTRUDER_LIMIT
+  #define DEFAULT_VOLUMETRIC_EXTRUDER_LIMIT 0.00
+#endif
+
+/**
  * LCD Contrast for Graphical Displays
  */
 #if ENABLED(CARTESIO_UI)
@@ -280,7 +294,7 @@
 #elif ENABLED(AZSMZ_12864)
   #define _LCD_CONTRAST_MIN  120
   #define _LCD_CONTRAST_INIT 190
-#elif ENABLED(MKS_LCD12864B)
+#elif ENABLED(MKS_LCD12864)
   #define _LCD_CONTRAST_MIN  120
   #define _LCD_CONTRAST_INIT 205
 #elif EITHER(MKS_MINI_12864, ENDER2_STOCKDISPLAY)
@@ -1678,16 +1692,16 @@
 #if ENABLED(JOYSTICK)
   #if PIN_EXISTS(JOY_X)
     #define HAS_JOY_ADC_X 1
-#endif
+  #endif
   #if PIN_EXISTS(JOY_Y)
     #define HAS_JOY_ADC_Y 1
-#endif
+  #endif
   #if PIN_EXISTS(JOY_Z)
     #define HAS_JOY_ADC_Z 1
-#endif
+  #endif
   #if PIN_EXISTS(JOY_EN)
     #define HAS_JOY_ADC_EN 1
-#endif
+  #endif
 #endif
 
 // Heaters
@@ -2251,31 +2265,31 @@
  * Bed Probing bounds
  */
 
-#ifndef MIN_PROBE_EDGE
-  #define MIN_PROBE_EDGE 0
+#ifndef PROBING_MARGIN
+  #define PROBING_MARGIN 0
 #endif
 
 #if IS_KINEMATIC
-  #undef MIN_PROBE_EDGE_LEFT
-  #undef MIN_PROBE_EDGE_RIGHT
-  #undef MIN_PROBE_EDGE_FRONT
-  #undef MIN_PROBE_EDGE_BACK
-  #define MIN_PROBE_EDGE_LEFT 0
-  #define MIN_PROBE_EDGE_RIGHT 0
-  #define MIN_PROBE_EDGE_FRONT 0
-  #define MIN_PROBE_EDGE_BACK 0
+  #undef PROBING_MARGIN_LEFT
+  #undef PROBING_MARGIN_RIGHT
+  #undef PROBING_MARGIN_FRONT
+  #undef PROBING_MARGIN_BACK
+  #define PROBING_MARGIN_LEFT 0
+  #define PROBING_MARGIN_RIGHT 0
+  #define PROBING_MARGIN_FRONT 0
+  #define PROBING_MARGIN_BACK 0
 #else
-  #ifndef MIN_PROBE_EDGE_LEFT
-    #define MIN_PROBE_EDGE_LEFT MIN_PROBE_EDGE
+  #ifndef PROBING_MARGIN_LEFT
+    #define PROBING_MARGIN_LEFT PROBING_MARGIN
   #endif
-  #ifndef MIN_PROBE_EDGE_RIGHT
-    #define MIN_PROBE_EDGE_RIGHT MIN_PROBE_EDGE
+  #ifndef PROBING_MARGIN_RIGHT
+    #define PROBING_MARGIN_RIGHT PROBING_MARGIN
   #endif
-  #ifndef MIN_PROBE_EDGE_FRONT
-    #define MIN_PROBE_EDGE_FRONT MIN_PROBE_EDGE
+  #ifndef PROBING_MARGIN_FRONT
+    #define PROBING_MARGIN_FRONT PROBING_MARGIN
   #endif
-  #ifndef MIN_PROBE_EDGE_BACK
-    #define MIN_PROBE_EDGE_BACK MIN_PROBE_EDGE
+  #ifndef PROBING_MARGIN_BACK
+    #define PROBING_MARGIN_BACK PROBING_MARGIN
   #endif
 #endif
 
@@ -2458,7 +2472,11 @@
 #endif
 
 // Number of VFAT entries used. Each entry has 13 UTF-16 characters
-#define MAX_VFAT_ENTRIES TERN(SCROLL_LONG_FILENAMES, 5, 2)
+#if EITHER(SCROLL_LONG_FILENAMES, DWIN_CREALITY_LCD)
+  #define MAX_VFAT_ENTRIES (5)
+#else
+  #define MAX_VFAT_ENTRIES (2)
+#endif
 
 // Nozzle park for Delta
 #if BOTH(NOZZLE_PARK_FEATURE, DELTA)
@@ -2519,4 +2537,6 @@
 
 #if !NUM_SERIAL
   #undef BAUD_RATE_GCODE
+#elif NUM_SERIAL > 1
+  #define HAS_MULTI_SERIAL 1
 #endif
